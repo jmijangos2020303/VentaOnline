@@ -55,7 +55,7 @@ function agregarCategoria(req, res) {
     var params = req.body;
 
     if (req.user.usuario != 'ADMIN') {
-        return res.status(500).send({ mensaje: 'ERROR este usuario no puede crear nuevos usuarios' })
+        return res.status(500).send({ mensaje: 'ERROR este usuario no puede crear nueva categoria' })
     }else{
         if( params.nombreCategoria && params.descripcion ){
             categoriaModelo.nombreCategoria = params.nombreCategoria;
