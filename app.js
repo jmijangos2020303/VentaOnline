@@ -4,7 +4,9 @@ const app = express();
 
 // IMPORTACION RUTAS
 
-const rutaUsuario = require("./src/routers/usuarios.routes")
+const rutaUsuario = require("./src/routers/usuarios.routes");
+const rutaCategoria = require("./src/routers/categoria.routes");
+const rutaProducto = require("./src/routers/producto.routes");
 
 
 
@@ -18,6 +20,6 @@ app.use(cors());
 
 
 // CARGA DE RUTAS localhost:3000/api/usuarios, empresas etc
-app.use('/api', rutaUsuario);
+app.use('/api', rutaUsuario, rutaCategoria, rutaProducto);
 
 module.exports = app;
