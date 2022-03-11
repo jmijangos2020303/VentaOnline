@@ -1,6 +1,10 @@
 const Usuario = require('../models/usuarios.model');
 const bcrypt = require('bcrypt-nodejs');
 const jwt = require('../services/jwt');
+const carritoControlador = require('../controllers/carrito.controller');
+const Factura = require('../models/factura.model');
+
+
 
 
 function mainStart(req, res) {
@@ -44,80 +48,87 @@ function obtenerUsuarios(req, res) {
     })
 }
 
-function login(req, res) {
-    var parametros = req.body
+function login(req, res){
+    var params = req.body;
+    Usuario.findOne({usuario: params.usuario},(err, usuarioEncontrado)=>{
+        if(err) return res.status(500).send({mensaje: 'error en la peticion'})
+        if(usuarioEncontrado){
+        bcrypt.compare(params.password, usuarioEncontrado.password, (err, passwordCorrecta)=>{
+            if(passwordCorrecta){
+                if(params.obtenerToken === 'true'){
+                    if(usuarioEncontrado.rol ==="ADMIN"){
+                        return res.status(200).send({token: jwt.crearToken(usuarioEncontrado)})
+                    }else{
+                        carritoControlador.crearCarrito(usuarioEncontrado._id);
+                        Factura.find({idUsuario: usuarioEncontrado._id}, (err, facturaEncontrada)=>{
+                            if(err) return res.status(500).send({mensaje: 'error en la peticion'})
+                            if(!usuarioEncontrado) return res.status(500).send({mensaje: 'error en la consulta de facturas'})
+                            return res.status(200).send({token: jwt.crearToken(usuarioEncontrado),facturaEncontrada})
 
-    Usuario.findOne({ usuario: parametros.usuario }, (err, buscarUsuario) =>{
-        if(err) {return res.status(500).send({ mensaje: 'Error al solicitar datos' })
-        }else if(buscarUsuario) {
-            bcrypt.compare(parametros.password, buscarUsuario.password, (err, correctPass)=>{
-                if(err){
-                    return res.status(500).send({mensaje: 'Error al comparar'});
-                }else if(correctPass){
-                    return res.status(200).send({token: jwt.crearToken(buscarUsuario)});
+                        } )                        
+                    }
                 }else{
-                    res.send({mensaje: 'Contraseña incorrecta'});
-                }
-            });
-        }else{
-            res.send({ mensaje: 'Datos de usuario incorrectos' });
-        }
-    })
-}
+                    usuarioEncontrado.password = undefined;
 
-function agregarUsuario(req, res) {
-    var usuarioModelo = new Usuario();
-    var parametros = req.body;
-    
-    if (req.user.usuario != 'Admin') {
-        return res.status(500).send({ mensaje: 'ERROR este usuario no puede crear nuevos usuarios' })
+                    return res.status(200).send({usuarioEncontrado})
+                }
+            }else{
+                return res.status(404).send({mensaje: 'el usuario no se ha podido identificar'})
+            }
+        })
     }else{
-        if(parametros.usuario && parametros.password && parametros.nombre) {
-            usuarioModelo.nombre = parametros.nombre;
-            usuarioModelo.usuario = parametros.usuario;
-            usuarioModelo.rol = 'Cliente';
-
-            Usuario.find({ usuario: usuarioModelo.usuario }).exec((err, buscarUsuario) =>{
-                if(err) return res.status(500).send({ mensaje: 'Error en la peticion de datos' })
-
-                if(buscarUsuario && buscarUsuario.length >= 1) {
-                    return res.status(500).send({ mensaje: 'Ya existe este Usuario' })
-                }else{
-                    bcrypt.hash(parametros.password, null, null, (err, passCrypt) =>{
-                        usuarioModelo.password = passCrypt;
-
-                        usuarioModelo.save((err, usuarioGuardado) =>{
-                            if(err) return res.status(500).send({ mensaje: 'ERROR al guardar la empresa' })
-
-                            if(usuarioGuardado) {
-                                res.status(200).send({ usuarioGuardado })
-                            }else{
-                                res.status(500).send({ mensaje: 'No se pudo registrar una nueva Empresa' })
-                            }
-                        })
-                    })
-                }
-            })
-        }else{
-            return res.status(500).send({ mensaje: 'Necesitas los campos siguientes: usuario, password y nombre' })
-        }
+        return res.status(404).send({mensaje: 'el usuario no se ha podido encontrar'})
     }
+    })
 
 }
+
+
+function registrarUsuario(req, res){
+    var usuarioModel = new Usuario();
+    var params = req.body;
+    if(params.nombre && params.usuario  && params.password){
+        usuarioModel.nombre = params.nombre;
+        usuarioModel.usuario = params.usuario;
+        usuarioModel.rol = 'Cliente';
+        usuarioModel.password = params.password;
+        Usuario.find({$or:[
+            {usuario: usuarioModel.Usuario},
+            {password: usuarioModel.password}
+        ]}).exec((err, usuarioEncontrado)=>{
+            if(err) return res.status(500).send({mensaje: 'error en la peticion'});
+            if(usuarioEncontrado && usuarioEncontrado.length >=1){
+                return res.status(500).send({mensaje: 'El cliente ya existe'});
+            }else{
+                bcrypt.hash(params.password, null, null,(err, passwordEncriptada)=>{
+                    usuarioModel.password = passwordEncriptada;
+                    usuarioModel.save((err, usuarioGuardado)=>{
+                        if(usuarioGuardado){
+                            res.status(200).send(usuarioGuardado)
+                        }else{
+                            res.status(404).send({mensaje: 'no se ha podido registrar el usuario'});
+                        }
+                    })
+                })
+            }
+        })
+    }
+}
+
 
 function editarUsuario(req, res) {
-    var idUser = req.parametros.idUser;
+    var idUsuario = req.parametros.idUsuario;
     var parametros = req.body;
 
-    if (idUser != req.user.sub) {
+    if (idUsuario != req.user.sub) {
         return res.status(500).send({ mensaje: 'No pudieres editar usuarios ajenos' })
     }else{
         if (parametros.rol) {
             if (parametros.rol != 'Cliente' && parametros.rol != 'ADMIN'){ 
                 return res.status(500).send({ mensaje: 'Rol mal ingresado' })
             }else{
-            if(parametros.password) return res.status(500).send({ mensaje: 'La contraseña no puede ser modificada' })
-            Usuario.findByIdAndUpdate(idUser, parametros, { new: true }, (err, buscarUsuarioed) =>{
+            if(parametros.password) return res.status(500).send({ mensaje: 'La password no puede ser modificada' })
+            Usuario.findByIdAndUpdate(idUsuario, parametros, { new: true }, (err, buscarUsuarioed) =>{
 
                 if(err) return res.status(500).send({ mensaje: 'Error en la peticion' });
                 if(!buscarUsuarioed) return res.status(500).send({ mensaje: 'Error al actualizar usuario' });
@@ -125,8 +136,8 @@ function editarUsuario(req, res) {
                 })
         }
         }else{
-        if(parametros.password) return res.status(500).send({ mensaje: 'La contraseña no puede ser modificada' })
-        User.findByIdAndUpdate(idUser, parametros, { new: true }, (err, buscarUsuarioed) =>{
+        if(parametros.password) return res.status(500).send({ mensaje: 'La password no puede ser modificada' })
+        User.findByIdAndUpdate(idUsuario, parametros, { new: true }, (err, buscarUsuarioed) =>{
 
         if(err) return res.status(500).send({ mensaje: 'Error en la peticion' });
         if(!buscarUsuarioed) return res.status(500).send({ mensaje: 'Error al actualizar usuario' });
@@ -137,12 +148,12 @@ function editarUsuario(req, res) {
 }
 
 function eliminarUsuario(req, res) {
-    var idUser = req.parametros.idUser;
+    var idUsuario = req.parametros.idUsuario;
 
-    if (idUser != req.user.sub) {
+    if (idUsuario != req.user.sub) {
         return res.status(500).send({ mensaje: 'No puede eliminar a otros usuarios' })
     }else{
-        User.findByIdAndDelete(idUser, (err, usuarioEliminado) =>{
+        User.findByIdAndDelete(idUsuario, (err, usuarioEliminado) =>{
         if(err) return res.status(500).send({ mensaje: 'Error en solicitar la eliminacion de usuario' });
         if(!usuarioEliminado) return res.status(500).send({ mensaje: 'Error al eliminar usuario' });
 
@@ -155,7 +166,7 @@ module.exports = {
     mainStart,
     obtenerUsuarios,
     login,
-    agregarUsuario,
+    registrarUsuario,
     editarUsuario,
     eliminarUsuario
 }

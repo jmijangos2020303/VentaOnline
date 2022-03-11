@@ -2,12 +2,16 @@
 const mongoose = require ('mongoose');
 var Schema = mongoose.Schema;
 
-var CartSchema = Schema({
-    nombreProducto: String,
-    precioProducuto: Number,
-    cantidadCompra: Number,
-    productoID: { type: Schema.Types.ObjectId, ref: 'Productos' },
-    usuarioID: { type: Schema.Types.ObjectId, ref: 'Usuarios' }
-});
+var carritoSchema = Schema({
+    idUsuario: { type: Schema.ObjectId, ref: 'Usuarios' },
+    productos: [{
+        idProducto: { type: Schema.ObjectId, ref: 'Productos' },
+        nombre: String,
+        precio: Number,
+        cantidad: Number,
+        subTotal:Number
+    }],
+    total: {type: Number, default: 0}
+})
 
-module.exports = mongoose.model('Carrito', CartSchema);
+module.exports = mongoose.model('carrito', carritoSchema);

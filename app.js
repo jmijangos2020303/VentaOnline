@@ -7,6 +7,8 @@ const app = express();
 const rutaUsuario = require("./src/routers/usuarios.routes");
 const rutaCategoria = require("./src/routers/categoria.routes");
 const rutaProducto = require("./src/routers/producto.routes");
+const rutaCarrito = require("./src/routers/carrito.routes")
+const rutaFactura = require("./src/routers/factura.routes");
 
 
 
@@ -20,6 +22,6 @@ app.use(cors());
 
 
 // CARGA DE RUTAS localhost:3000/api/usuarios, empresas etc
-app.use('/api', rutaUsuario, rutaCategoria, rutaProducto);
+app.use('/api', rutaUsuario, rutaCategoria, rutaProducto, rutaFactura, rutaCarrito);
 
 module.exports = app;

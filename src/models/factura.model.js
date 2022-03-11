@@ -3,14 +3,14 @@ const mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var FacturaSchema = Schema({
-    fecha: String,
-    productos:[{
-        idProducto: { type: Schema.Types.ObjectId, ref: 'Productos' },
+    idUsuario: { type: Schema.ObjectId, ref: 'Usuario' },
+    productos: [{
+        idProducto: { type: Schema.ObjectId, ref: 'Productos' },
         nombre: String,
         precio: Number,
         cantidad: Number
     }],
-    usuarioID:{ type: Schema.Types.ObjectId, ref: 'Usuarios' }
-});
+    total: {type: Number, default: 0}
+})
 
 module.exports = mongoose.model('Facturas', FacturaSchema);

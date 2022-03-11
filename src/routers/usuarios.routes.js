@@ -9,9 +9,9 @@ const api = express.Router();
 
 api.get('/buscarUsuario', usuariosControlador.obtenerUsuarios);
 api.post('/login', usuariosControlador.login);
-api.post('/createUser', md_autenticacion.Auth, usuariosControlador.agregarUsuario);
-api.put('/editUser/:idUser', md_autenticacion.Auth, usuariosControlador.editarUsuario);
-api.delete('/deleteUser/:idUser', md_autenticacion.Auth, usuariosControlador.eliminarUsuario);
+api.post('/registrarUsuario', usuariosControlador.registrarUsuario);
+api.put('/editarUsuario/:idUsuario', md_autenticacion.Auth, usuariosControlador.editarUsuario);
+api.delete('/eliminarUsuario/:idUsuario', md_autenticacion.Auth, usuariosControlador.eliminarUsuario);
 
 
 

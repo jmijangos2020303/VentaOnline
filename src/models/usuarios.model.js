@@ -6,6 +6,11 @@ const UsuarioSchema = Schema({
     usuario: String,
     password: String,
     rol: String,
+    facturaDetail: [],
+    carrito: [{
+        name: String,
+        price: Number,
+        stock: Number}],
 });
 
 module.exports = mongoose.model('Usuarios', UsuarioSchema);
