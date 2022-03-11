@@ -38,15 +38,34 @@ function agregarCarrito(req, res){
                 Carrito.findOneAndUpdate({idUsuario: req.user.sub},{total: totalFinal},
                     {new:true, useFindAndModify: false}, (err, carritoAgregado2) =>{ 
                 if(err) res.status(500).send({mensaje: 'error en la peticion3'})
-                if(!carritoAgregado2) return res.status(500).send({mensaje: 'error al agregar al carrito'})
+                if(!carritoAgregado2) return res.status(500).send({mensaje: 'error al agregar al carrito, posiblemente no se ha logeado'})
                     return res.status(200).send({carritoAgregado2})                        
                 })
             })
     })
   }
+
+
+
+  function EliminarProductoCarrito(req, res) {
+    var idProducto = req.params.idProducto;
+
+
+    Carrito.findOneAndUpdate({ productos : { $elemMatch : { _id: idProducto } } }, 
+        { $pull : { productos : { _id : idProducto } } }, {new : true}, (err, productoEliminado)=>{
+            if(err) return res.status(500).send({ mensaje: 'Error en la peticion'});
+            if(!productoEliminado) return res.status(500).send({ mensaje: 'Error al eliminar el producto del Carrito'});
+
+            return res.status(200).send({producto : productoEliminado})
+        })
+}
+
+
+
     
 
 module.exports = {
     crearCarrito,
-    agregarCarrito
+    agregarCarrito,
+    EliminarProductoCarrito
 }
