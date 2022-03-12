@@ -117,7 +117,7 @@ function registrarUsuario(req, res){
 
 
 function editarUsuario(req, res) {
-    var idUsuario = req.parametros.idUsuario;
+    var idUsuario = req.params.idUsuario;
     var parametros = req.body;
 
     if (idUsuario != req.user.sub) {
@@ -137,7 +137,7 @@ function editarUsuario(req, res) {
         }
         }else{
         if(parametros.password) return res.status(500).send({ mensaje: 'La password no puede ser modificada' })
-        User.findByIdAndUpdate(idUsuario, parametros, { new: true }, (err, buscarUsuarioed) =>{
+        Usuario.findByIdAndUpdate(idUsuario, parametros, { new: true }, (err, buscarUsuarioed) =>{
 
         if(err) return res.status(500).send({ mensaje: 'Error en la peticion' });
         if(!buscarUsuarioed) return res.status(500).send({ mensaje: 'Error al actualizar usuario' });
@@ -148,12 +148,12 @@ function editarUsuario(req, res) {
 }
 
 function eliminarUsuario(req, res) {
-    var idUsuario = req.parametros.idUsuario;
+    var idUsuario = req.params.idUsuario;
 
     if (idUsuario != req.user.sub) {
         return res.status(500).send({ mensaje: 'No puede eliminar a otros usuarios' })
     }else{
-        User.findByIdAndDelete(idUsuario, (err, usuarioEliminado) =>{
+        Usuario.findByIdAndDelete(idUsuario, (err, usuarioEliminado) =>{
         if(err) return res.status(500).send({ mensaje: 'Error en solicitar la eliminacion de usuario' });
         if(!usuarioEliminado) return res.status(500).send({ mensaje: 'Error al eliminar usuario' });
 

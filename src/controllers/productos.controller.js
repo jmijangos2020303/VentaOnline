@@ -33,10 +33,10 @@ function registroProducto(req, res){
 }
 
 function editarProducto(req, res){
-    var idProducto = req.parametros.idProducto;
+    var idProducto = req.params.idProducto;
     var parametros = req.body;
-    if(req.usuario.rol === 'ADMIN'){
-        productosModel.findByIdAndUpdate(idProducto, parametros, {new: true, useFindAndModify: false},(err, productoActualizado)=>{
+    if(req.user.usuario === 'ADMIN'){
+        Productos.findByIdAndUpdate(idProducto, parametros, {new: true, useFindAndModify: false},(err, productoActualizado)=>{
         if(err) return res.status(500).send({mensaje: 'error en la peticion'})
         if(!productoActualizado) return res.status(500).send({mensaje: 'no se ha podido encontrar el producto'})
         return res.status(200).send({productoActualizado});
@@ -47,8 +47,8 @@ function editarProducto(req, res){
 }
 
 function elimininarProducto(req, res){
-    var idProducto = req.parametros.idProducto;
-if(req.usuario.rol ==='ADMIN'){
+    var idProducto = req.params.idProducto;
+if(req.user.usuario === 'ADMIN'){
 Productos.findByIdAndDelete(idProducto,(err, productoEliminado)=>{
     if(err) return res.status(500).send({mensaje: 'error en la peticion'})
     if(!productoEliminado) return res.status(500).send({mensaje: 'producto no encontrado'})
